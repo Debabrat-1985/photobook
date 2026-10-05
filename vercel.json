@@ -1,0 +1,30 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "routes": [
+    {
+      "src": "/api/r2/upload",
+      "dest": "/api/r2/upload.js"
+    },
+    {
+      "src": "/api/r2/delete",
+      "dest": "/api/r2/delete.js"
+    },
+    {
+      "src": "/api/public/book/(?<slug>[^/]+)",
+      "dest": "/api/sharing/public-book.js?slug=$slug"
+    },
+    {
+      "src": "/book/(.*)",
+      "dest": "/index.html"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User account profile and subscription tier",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string" },
+        "full_name": { "type": "string", "maxLength": 100 },
+        "avatar_url": { "type": "string" },
+        "plan": { "type": "string", "enum": ["free", "pro", "premium", "lifetime"] },
+        "role": { "type": "string", "enum": ["user", "admin"] },
+        "created_at": { "type": "string" },
+        "updated_at": { "type": "string" }
+      },
+      "required": ["id", "email", "full_name", "plan"]
+    },
+    "MemoryBook": {
+      "title": "MemoryBook",
+      "description": "Digital photo memory book container",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "user_id": { "type": "string" },
+        "title": { "type": "string", "maxLength": 120 },
+        "subtitle": { "type": "string", "maxLength": 200 },
+        "author": { "type": "string", "maxLength": 80 },
+        "publish_date": { "type": "string" },
+        "dedication": { "type": "string", "maxLength": 500 },
+        "category": { "type": "string" },
+        "template_id": { "type": "string" },
+        "cover_image_url": { "type": "string" },
+        "cover_image_key": { "type": "string" },
+        "status": { "type": "string", "enum": ["draft", "published", "archived"] },
+        "is_public": { "type": "boolean" },
+        "public_slug": { "type": "string" },
+        "page_count": { "type": "number" },
+        "created_at": { "type": "string" },
+        "updated_at": { "type": "string" }
+      },
+      "required": ["id", "user_id", "title", "template_id"]
+    },
+    "BookPage": {
+      "title": "BookPage",
+      "description": "Individual page inside a memory book",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "book_id": { "type": "string" },
+        "page_number": { "type": "number" },
+        "title": { "type": "string", "maxLength": 100 },
+        "description": { "type": "string", "maxLength": 2000 },
+        "layout": { "type": "string" },
+        "image_url": { "type": "string" },
+        "image_key": { "type": "string" },
+        "created_at": { "type": "string" }
+      },
+      "required": ["book_id", "page_number"]
+    },
+    "Share": {
+      "title": "Share",
+      "description": "Public share record for a memory book",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "book_id": { "type": "string" },
+        "public_slug": { "type": "string" },
+        "is_active": { "type": "boolean" },
+        "created_at": { "type": "string" }
+      },
+      "required": ["book_id", "public_slug", "is_active"]
+    },
+    "AnalyticsEvent": {
+      "title": "AnalyticsEvent",
+      "description": "First-party usage and engagement event",
+      "type": "object",
+      "properties": {
+        "event_name": { "type": "string", "maxLength": 60 },
+        "user_id": { "type": "string" },
+        "book_id": { "type": "string" },
+        "metadata": { "type": "object" },
+        "created_at": { "type": "string" }
+      },
+      "required": ["event_name"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile documents keyed by Firebase Auth UID"
+    },
+    "/books/{bookId}": {
+      "schema": "MemoryBook",
+      "description": "Top-level memory books collection"
+    },
+    "/books/{bookId}/pages/{pageId}": {
+      "schema": "BookPage",
+      "description": "Subcollection of pages belonging to a specific book"
+    },
+    "/shares/{shareId}": {
+      "schema": "Share",
+      "description": "Public book share tokens and slug lookups"
+    },
+    "/analytics_events/{eventId}": {
+      "schema": "AnalyticsEvent",
+      "description": "Analytics tracking events"
+    }
+  }
+}

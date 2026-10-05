@@ -1,0 +1,6 @@
+{
+  "name": "Memorable Photo Book - Digital Memory Book Platform",
+  "description": "A production-ready mobile-first SaaS platform for creating, editing, and sharing 3D digital photo memory books with cloud storage and collaboration.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

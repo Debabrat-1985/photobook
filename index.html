@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Memorable Photo Book - Digital Memory Book Platform</title>
+    <meta name="description" content="A production-ready mobile-first SaaS platform for creating, editing, and sharing 3D digital photo memory books with cloud storage and collaboration." />
+    <meta property="og:title" content="Memorable Photo Book - Digital Memory Book Platform" />
+    <meta property="og:description" content="A production-ready mobile-first SaaS platform for creating, editing, and sharing 3D digital photo memory books with cloud storage and collaboration." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#6366f1">
+
+    <!-- PWA Manifest & Service Worker -->
+    <link rel="manifest" href="/public/manifest.webmanifest">
+    <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>📖</text></svg>">
+    
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/public/sw.js').catch((err) => {
+            console.log('SW registration notice:', err);
+          });
+        });
+      }
+    </script>
+</head>
+<body>
+
+    <!-- Native Mobile Floating Toast -->
+    <div id="mobile-toast" class="mobile-toast"></div>
+
+    <!-- Mobile Header & App Bar -->
+    <header>
+        <div class="header-left">
+            <button class="btn-icon" id="btn-back" onclick="App.handleBack()" style="display:none;" title="Back to All Books">⬅️</button>
+            <div class="header-title" data-i18n="app_title">📖 Memorable Photo Book</div>
+        </div>
+        <div class="header-actions">
+            <button class="btn-icon" id="btn-lang" onclick="App.toggleLang()" title="Toggle Language" style="font-size: 0.85rem;">अ/A</button>
+            <button class="btn-icon" id="btn-theme" onclick="App.toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
+            <button class="header-avatar-btn" id="btn-header-profile" onclick="App.openAccountModal()" style="display:none;" title="Account Profile">U</button>
+        </div>
+    </header>
+
+    <!-- PWA Install Banner -->
+    <div id="install-banner">
+        <span data-i18n="app_ready">App is ready to install on your mobile device!</span>
+        <button class="btn-install" onclick="App.installPWA()" data-i18n="install_app">Install App</button>
+    </div>
+
+    <!-- Offline Network Banner -->
+    <div id="offline-banner" class="offline-banner">
+        ⚠️ You are currently offline. Changes are saved locally and will sync when connection returns.
+    </div>
+
+    <main>
+        <!-- View Auth Gate: Mobile Login / Sign Up Screen -->
+        <div id="view-auth-gate" class="view-container active">
+            <div class="auth-gate-wrapper">
+                <div class="auth-gate-hero">
+                    <div class="app-logo-badge">📖</div>
+                    <h1 class="app-name">Memorable Photo Book</h1>
+                    <p class="app-tagline">Preserve and flip through your life's precious memories in 3D</p>
+                </div>
+
+                <div class="auth-segmented-tabs">
+                    <button id="gate-tab-signin" class="segmented-tab active" onclick="App.switchGateTab('signin')">Sign In</button>
+                    <button id="gate-tab-signup" class="segmented-tab" onclick="App.switchGateTab('signup')">Create Account</button>
+                </div>
+
+                <div id="gate-error-banner" class="gate-error-banner" style="display:none;"></div>
+
+                <!-- Sign In Form -->
+                <form id="gate-form-signin" onsubmit="event.preventDefault(); App.handleGateSignIn();" class="gate-form">
+                    <div class="input-card">
+                        <label>Email Address</label>
+                        <input type="email" id="gate-signin-email" placeholder="name@example.com" required autocomplete="email">
+                    </div>
+                    <div class="input-card">
+                        <label>Password</label>
+                        <input type="password" id="gate-signin-password" placeholder="••••••••" required autocomplete="current-password">
+                    </div>
+                    <div class="forgot-link-row">
+                        <a href="javascript:void(0)" onclick="App.switchGateTab('forgot')">Forgot password?</a>
+                    </div>
+                    <button type="submit" class="btn-primary-mobile" id="btn-gate-signin">
+                        <span>Sign In</span>
+                    </button>
+                    <div class="divider-or"><span>OR</span></div>
+                    <button type="button" class="btn-google-mobile" onclick="App.handleGoogleSignIn()">
+                        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3.03h3.88c2.27-2.09 3.665-5.17 3.665-9.12z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.03c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.27v3.12C3.3 21.43 7.37 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.29c-.25-.72-.38-1.49-.38-2.29s.13-1.57.38-2.29V6.59H1.27C.46 8.2 0 10.05 0 12s.46 3.8 1.27 5.41l4.01-3.12z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.37 0 3.3 2.57 1.27 6.59l4.01 3.12c.95-2.83 3.6-4.96 6.72-4.96z"/></svg>
+                        <span>Continue with Google</span>
+                    </button>
+                </form>
+
+                <!-- Sign Up Form -->
+                <form id="gate-form-signup" onsubmit="event.preventDefault(); App.handleGateSignUp();" class="gate-form" style="display:none;">
+                    <div class="input-card">
+                        <label>Full Name</label>
+                        <input type="text" id="gate-signup-name" placeholder="John Doe" required autocomplete="name">
+                    </div>
+                    <div class="input-card">
+                        <label>Email Address</label>
+                        <input type="email" id="gate-signup-email" placeholder="name@example.com" required autocomplete="email">
+                    </div>
+                    <div class="input-card">
+                        <label>Password</label>
+                        <input type="password" id="gate-signup-password" placeholder="At least 6 characters" required autocomplete="new-password">
+                    </div>
+                    <div class="input-card">
+                        <label>Confirm Password</label>
+                        <input type="password" id="gate-signup-confirm" placeholder="Repeat password" required autocomplete="new-password">
+                    </div>
+                    <button type="submit" class="btn-primary-mobile" id="btn-gate-signup">
+                        <span>Create Account</span>
+                    </button>
+                </form>
+
+                <!-- Forgot Password Form -->
+                <form id="gate-form-forgot" onsubmit="event.preventDefault(); App.handleGateForgotPassword();" class="gate-form" style="display:none;">
+                    <p class="gate-subtext">Enter your registered email and we will send you instructions to reset your password.</p>
+                    <div class="input-card">
+                        <label>Email Address</label>
+                        <input type="email" id="gate-forgot-email" placeholder="name@example.com" required autocomplete="email">
+                    </div>
+                    <button type="submit" class="btn-primary-mobile">
+                        <span>Send Reset Link</span>
+                    </button>
+                    <div style="text-align:center; margin-top:12px;">
+                        <a href="javascript:void(0)" onclick="App.switchGateTab('signin')" class="back-link">Back to Sign In</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- View 0: Home / SaaS Dashboard -->
+        <div id="view-home" class="view-container">
+            <!-- User / Account Status Bar -->
+            <div id="dashboard-user-bar" class="dashboard-user-bar"></div>
+
+            <!-- Intelligent Action Center -->
+            <div id="dashboard-action-center" style="display:none;"></div>
+
+            <!-- Search & Sort Row -->
+            <div class="search-filter-wrap">
+                <div style="display:flex; gap:8px;">
+                    <div class="search-input-box" style="flex:1;">
+                        <svg class="search-icon-svg" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                        <input type="text" id="search-input" placeholder="Search books..." oninput="App.handleSearch(event)">
+                    </div>
+                    <select id="sort-select" style="width:auto; max-width:130px; padding:8px 10px; font-size:0.8rem; border-radius:20px;" onchange="App.handleSortChange(event)">
+                        <option value="recent">Recent</option>
+                        <option value="newest">Newest</option>
+                        <option value="oldest">Oldest</option>
+                    </select>
+                </div>
+
+                <!-- Category Filter Pills -->
+                <div id="category-filter-pills" class="filter-pills-row"></div>
+            </div>
+
+            <!-- Book List -->
+            <div id="home-books-list" style="display: flex; flex-direction: column;"></div>
+
+            <!-- Floating Create Button -->
+            <button class="floating-add-btn" onclick="App.createNewBook()" title="Create New Memory Book">+</button>
+        </div>
+
+        <!-- View 1: 3D Book Preview -->
+        <div id="view-preview" class="view-container">
+            <div class="book-frame" id="book-frame-content"></div>
+            <div id="book-nav-container" class="book-nav-controls"></div>
+        </div>
+
+        <!-- View 2: Book Pages & Line-by-Line Management -->
+        <div id="view-pages" class="view-container">
+            <div class="pages-header">
+                <h2 data-i18n="pages_title" style="font-size:1.3rem;">Book Pages</h2>
+                <div id="pages-counter" style="color: var(--text-secondary); font-weight: 600; font-size:0.9rem;"></div>
+            </div>
+            <div id="pages-grid" class="photo-grid"></div>
+
+            <label class="floating-add-btn" for="file-upload" title="Upload Photos to R2">+</label>
+            <input type="file" id="file-upload" multiple accept="image/*" style="display: none;">
+        </div>
+
+        <!-- View 3: Edit Page / Cover Details -->
+        <div id="view-edit" class="view-container">
+            <h2 id="edit-header-title" style="margin-bottom:15px; font-size:1.3rem;" data-i18n="edit_title">Edit Details</h2>
+            <div id="edit-content"></div>
+        </div>
+
+        <!-- View 4: Share & SaaS Book Settings -->
+        <div id="view-share" class="view-container">
+            <h2 style="margin-bottom: 16px; font-size:1.3rem;" data-i18n="settings_title">Book Settings & Sharing</h2>
+
+            <!-- Public Link Card -->
+            <div class="edit-card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <div>
+                        <div style="font-weight:700; font-size:1rem;" data-i18n="share_title">Public Book Sharing</div>
+                        <div style="font-size:0.8rem; color:var(--text-secondary);">Allow anyone with the link to flip through this memory book.</div>
+                    </div>
+                    <label style="position:relative; display:inline-block; width:48px; height:26px; cursor:pointer;">
+                        <input type="checkbox" id="public-share-toggle" onchange="App.togglePublicSharing(event)" style="opacity:0; width:0; height:0;">
+                        <span style="position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background:#cbd5e1; transition:.3s; border-radius:34px;" id="toggle-bg"></span>
+                    </label>
+                </div>
+
+                <div class="input-group">
+                    <label data-i18n="share_link_label">Public Link</label>
+                    <div style="display:flex; gap:8px;">
+                        <input type="text" id="share-link-input" readonly style="font-size:0.85rem; font-family:monospace;">
+                        <button class="btn btn-outline" style="width:auto; padding:8px 14px; white-space:nowrap;" onclick="App.copyPublicLink()" data-i18n="copy_link">Copy</button>
+                    </div>
+                </div>
+
+                <button class="btn" style="margin-top:6px;" onclick="App.shareBook()">
+                    <span data-i18n="native_share">Share via WhatsApp / Android Sheet</span> 📤
+                </button>
+            </div>
+
+            <!-- Collaboration Card -->
+            <div class="settings-card" onclick="App.openCollaboratorModal()">
+                <div class="settings-info">
+                    <span class="settings-title" data-i18n="collab_title">Invite Family / Friends</span>
+                    <span class="settings-desc" data-i18n="collab_desc">Grant Editor or Viewer permissions to co-create memories.</span>
+                </div>
+                <div class="settings-icon">👥</div>
+            </div>
+
+            <!-- Save as PDF / Print -->
+            <div class="settings-card" onclick="App.printBook()">
+                <div class="settings-info">
+                    <span class="settings-title" data-i18n="print_title">Save as PDF / Print</span>
+                    <span class="settings-desc" data-i18n="print_desc">Export book in printable high-resolution PDF format.</span>
+                </div>
+                <div class="settings-icon">🖨️</div>
+            </div>
+
+            <!-- Backup All Books -->
+            <div class="settings-card" onclick="App.exportProject()">
+                <div class="settings-info">
+                    <span class="settings-title" data-i18n="export_title">Backup All Books (JSON)</span>
+                    <span class="settings-desc" data-i18n="export_desc">Download a complete encrypted backup copy of your memories.</span>
+                </div>
+                <div class="settings-icon">💾</div>
+            </div>
+
+            <!-- Restore from Backup -->
+            <div class="settings-card" onclick="document.getElementById('restore-file-input').click()">
+                <div class="settings-info">
+                    <span class="settings-title" data-i18n="restore_title">Restore from Backup</span>
+                    <span class="settings-desc" data-i18n="restore_desc">Import and restore books from a previous JSON backup.</span>
+                </div>
+                <div class="settings-icon">📥</div>
+                <input type="file" id="restore-file-input" accept=".json" style="display:none;" onchange="App.restoreBackup(event)">
+            </div>
+
+            <!-- Delete Book -->
+            <div class="settings-card" style="border: 1px solid var(--danger); margin-top:20px;" onclick="App.confirmDeleteBook()">
+                <div class="settings-info">
+                    <span class="settings-title" style="color: var(--danger);" data-i18n="delete_book">Delete Current Book</span>
+                    <span class="settings-desc" data-i18n="delete_book_desc">Warning: This permanently removes this book and uploaded media.</span>
+                </div>
+                <div class="settings-icon">🗑️</div>
+            </div>
+        </div>
+
+        <!-- View 5: Account & Profile View -->
+        <div id="view-account" class="view-container">
+            <h2 style="margin-bottom:16px; font-size:1.3rem;">Account & Cloud Storage</h2>
+            <div id="view-account-content"></div>
+        </div>
+    </main>
+
+    <!-- Bottom Navigation (Mobile App Tabs) -->
+    <bottom-nav id="bottom-nav" style="display:none;">
+        <a class="nav-item active" data-view="view-home">
+            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            <span data-i18n="nav_home">Books</span>
+        </a>
+        <a class="nav-item" data-view="view-preview">
+            <svg viewBox="0 0 24 24"><path d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.2 0 2.4.15 3.5.5v11.5z"/></svg>
+            <span data-i18n="nav_preview">Preview</span>
+        </a>
+        <a class="nav-item" data-view="view-pages">
+            <svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
+            <span data-i18n="nav_pages">Pages</span>
+        </a>
+        <a class="nav-item" data-view="view-edit">
+            <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+            <span data-i18n="nav_edit">Edit</span>
+        </a>
+        <a class="nav-item" data-view="view-account">
+            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            <span>Profile</span>
+        </a>
+    </bottom-nav>
+
+    <!-- Custom Alerts & Confirmations Modal -->
+    <div class="modal-overlay" id="custom-modal">
+        <div class="modal-card">
+            <div class="modal-title" id="modal-title">Confirm</div>
+            <div class="modal-desc" id="modal-desc">Are you sure?</div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" id="modal-btn-cancel" onclick="App.closeModal()" data-i18n="cancel">Cancel</button>
+                <button class="btn btn-danger" id="modal-btn-confirm" data-i18n="confirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fullscreen Media Viewer -->
+    <div id="fullscreen-viewer">
+        <button class="fs-close" onclick="App.closeFS()" title="Close Viewer">&times;</button>
+        <div class="fs-img-container">
+            <img id="fs-img" src="" alt="Fullscreen memory view">
+        </div>
+    </div>
+
+    <!-- Auth Modal (Sign In / Sign Up) -->
+    <div class="modal-overlay" id="auth-modal">
+        <div class="modal-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+                <div style="display:flex; gap:12px;">
+                    <button id="auth-tab-btn-signin" class="filter-pill active" onclick="App.switchAuthTab('signin')" data-i18n="sign_in">Sign In</button>
+                    <button id="auth-tab-btn-signup" class="filter-pill" onclick="App.switchAuthTab('signup')" data-i18n="sign_up">Sign Up</button>
+                </div>
+                <button class="btn-icon" style="width:32px; height:32px; font-size:1.2rem;" onclick="App.closeModal('auth-modal')">&times;</button>
+            </div>
+
+            <div id="auth-error-msg" style="color:var(--danger); font-size:0.85rem; margin-bottom:10px; min-height:18px;"></div>
+
+            <!-- Sign In Form -->
+            <div id="auth-tab-signin" class="auth-tab-content">
+                <div class="input-group">
+                    <label data-i18n="email">Email Address</label>
+                    <input type="email" id="auth-signin-email" placeholder="name@example.com">
+                </div>
+                <div class="input-group">
+                    <label data-i18n="password">Password</label>
+                    <input type="password" id="auth-signin-password" placeholder="••••••••">
+                </div>
+                <div style="text-align:right; margin-bottom:14px;">
+                    <a href="javascript:void(0)" onclick="App.switchAuthTab('forgot')" style="font-size:0.82rem; color:var(--primary); text-decoration:none;" data-i18n="forgot_password">Forgot Password?</a>
+                </div>
+                <button class="btn" onclick="App.handleSignIn()" data-i18n="sign_in">Sign In</button>
+                <div style="display:flex; align-items:center; gap:8px; margin: 12px 0;">
+                    <div style="flex:1; height:1px; background:var(--border-color);"></div>
+                    <span style="font-size:0.75rem; color:var(--text-muted);">OR</span>
+                    <div style="flex:1; height:1px; background:var(--border-color);"></div>
+                </div>
+                <button class="btn btn-secondary" style="gap:8px;" onclick="App.handleGoogleSignIn()">
+                    <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3.03h3.88c2.27-2.09 3.665-5.17 3.665-9.12z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.03c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.27v3.12C3.3 21.43 7.37 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.29c-.25-.72-.38-1.49-.38-2.29s.13-1.57.38-2.29V6.59H1.27C.46 8.2 0 10.05 0 12s.46 3.8 1.27 5.41l4.01-3.12z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.37 0 3.3 2.57 1.27 6.59l4.01 3.12c.95-2.83 3.6-4.96 6.72-4.96z"/></svg>
+                    Continue with Google
+                </button>
+            </div>
+
+            <!-- Sign Up Form -->
+            <div id="auth-tab-signup" class="auth-tab-content" style="display:none;">
+                <div class="input-group">
+                    <label data-i18n="full_name">Full Name</label>
+                    <input type="text" id="auth-signup-name" placeholder="John Doe">
+                </div>
+                <div class="input-group">
+                    <label data-i18n="email">Email Address</label>
+                    <input type="email" id="auth-signup-email" placeholder="name@example.com">
+                </div>
+                <div class="input-group">
+                    <label data-i18n="password">Password</label>
+                    <input type="password" id="auth-signup-password" placeholder="At least 6 characters">
+                </div>
+                <div class="input-group">
+                    <label data-i18n="confirm_password">Confirm Password</label>
+                    <input type="password" id="auth-signup-confirm" placeholder="Repeat password">
+                </div>
+                <button class="btn" onclick="App.handleSignUp()" data-i18n="sign_up">Create Account</button>
+            </div>
+
+            <!-- Forgot Password Form -->
+            <div id="auth-tab-forgot" class="auth-tab-content" style="display:none;">
+                <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:14px;">Enter your email address and we'll send you instructions to reset your password.</p>
+                <div class="input-group">
+                    <label data-i18n="email">Email Address</label>
+                    <input type="email" id="auth-forgot-email" placeholder="name@example.com">
+                </div>
+                <button class="btn" onclick="App.handleForgotPassword()" data-i18n="reset_password_btn">Send Reset Link</button>
+                <div style="text-align:center; margin-top:12px;">
+                    <a href="javascript:void(0)" onclick="App.switchAuthTab('signin')" style="font-size:0.82rem; color:var(--primary); text-decoration:none;">Back to Sign In</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Collaborator Invitation Modal -->
+    <div class="modal-overlay" id="collab-modal">
+        <div class="modal-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <div class="modal-title" data-i18n="collab_title">Invite Collaborator</div>
+                <button class="btn-icon" style="width:32px; height:32px;" onclick="App.closeModal('collab-modal')">&times;</button>
+            </div>
+            <div class="modal-desc" data-i18n="collab_desc">Invite friends and family to help build this memory book.</div>
+
+            <div class="input-group">
+                <label data-i18n="email">Collaborator Email</label>
+                <input type="email" id="collab-email-input" placeholder="family@example.com">
+            </div>
+
+            <div class="input-group">
+                <label>Permission Level</label>
+                <select id="collab-role-select">
+                    <option value="editor">Editor (Can add photos & write stories)</option>
+                    <option value="viewer">Viewer (Can view private book)</option>
+                </select>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="App.closeModal('collab-modal')" data-i18n="cancel">Cancel</button>
+                <button class="btn" onclick="App.inviteCollaborator()" data-i18n="collab_send_invite">Send Invite</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pricing / Upgrade Modal -->
+    <div class="modal-overlay" id="pricing-modal">
+        <div class="modal-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <div class="modal-title" style="color:var(--primary);">✨ Upgrade Your Plan</div>
+                <button class="btn-icon" style="width:32px; height:32px;" onclick="App.closeModal('pricing-modal')">&times;</button>
+            </div>
+            <div id="pricing-reason-text" style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:14px;"></div>
+
+            <div style="display:flex; flex-direction:column; gap:12px;">
+                <!-- Pro Tier -->
+                <div style="border:2px solid var(--primary); border-radius:var(--radius-md); padding:14px; background:var(--bg-main);">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-weight:800; font-size:1.05rem;">Pro Creator</span>
+                        <span style="font-weight:800; color:var(--primary);">₹1,499 / year</span>
+                    </div>
+                    <div style="font-size:0.82rem; color:var(--text-secondary); margin:8px 0; line-height:1.5;">
+                        • 25 Memory Books<br>
+                        • Up to 60 Pages per Book<br>
+                        • All 10 Luxury Themes Unlocked<br>
+                        • HD Print & PDF Export<br>
+                        • Family Collaboration Enabled
+                    </div>
+                    <button class="btn" onclick="App.selectPlan('pro')">Upgrade to Pro</button>
+                </div>
+
+                <!-- Premium Tier -->
+                <div style="border:1px solid var(--border-color); border-radius:var(--radius-md); padding:14px; background:var(--bg-card);">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-weight:800; font-size:1.05rem;">Family & Studio</span>
+                        <span style="font-weight:800; color:var(--text-main);">₹3,499 / year</span>
+                    </div>
+                    <div style="font-size:0.82rem; color:var(--text-secondary); margin:8px 0; line-height:1.5;">
+                        • 100 Memory Books<br>
+                        • 150 Pages per Book<br>
+                        • 10 GB Cloudflare R2 Storage<br>
+                        • Custom Domain & Priority Support
+                    </div>
+                    <button class="btn btn-outline" onclick="App.selectPlan('premium')">Choose Studio</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toggle switch helper style -->
+    <style>
+        #public-share-toggle:checked + #toggle-bg {
+            background-color: var(--primary);
+        }
+        #public-share-toggle:checked + #toggle-bg:before {
+            transform: translateX(22px);
+        }
+        #toggle-bg:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+    </style>
+
+    <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
